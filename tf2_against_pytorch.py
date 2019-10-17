@@ -34,7 +34,7 @@ def cnn2d_torch(image: np.ndarray, filters: np.ndarray):
 
   return features_torch_
 
-
+# TODO: include diference in conv, and a mean of n experiments
 def main():
   print('TensorFlow version %s' % str(tf.__version__))
   print('PyTorch version %s' % str(torch.__version__))
