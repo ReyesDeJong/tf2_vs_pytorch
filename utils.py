@@ -2,18 +2,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def timer(start, end):
-  hours, rem = divmod(end - start, 3600)
+def timer(delta, seconds=False):
+  # delta: end-start
+  hours, rem = divmod(delta, 3600)
   minutes, seconds = divmod(rem, 60)
+  if seconds:
+    return "{:05.2f}".format(seconds)
   return "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
 
 
-def plot_image(image):
+def plot_each_channel_image(image):
   fig, ax = plt.subplots(nrows=1, ncols=3)
   ax[0].imshow(image[..., 0])
   ax[1].imshow(image[..., 1])
   ax[2].imshow(image[..., 2])
   plt.show()
+
+
+def plot_images(images: list, images_titles: list, fig_title: str, show=True):
+  fig, ax = plt.subplots(nrows=1, ncols=len(images))
+  for i in range(len(images)):
+    ax[i].imshow(images[i])
+    ax[i].set_title(images_titles[i])
+  fig.set_title(fig_title)
+  if show:
+    plt.show()
 
 
 def create_circular_mask(h, w, center=None, radius=None):

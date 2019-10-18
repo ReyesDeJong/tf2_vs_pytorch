@@ -1,12 +1,11 @@
 import time
 
-import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import torch
 from torch.nn import functional as F
 
-from utils import timer, create_circular_mask, make_gaussian
+from utils import timer, create_circular_mask, make_gaussian, plot_images
 
 
 @tf.function
@@ -34,8 +33,9 @@ def cnn2d_torch(image: np.ndarray, filters: np.ndarray):
 
   return features_torch_
 
+
 # TODO: include diference in conv, and a mean of n experiments
-def main():
+def main(perform_exp_n_times: int, iters_per_experiment: int, show_plots: bool):
   print('TensorFlow version %s' % str(tf.__version__))
   print('PyTorch version %s' % str(torch.__version__))
 
@@ -53,35 +53,57 @@ def main():
   gauss_kernel = np.stack([make_gaussian(5, 1)] * 3, axis=-1)[..., None]
 
   # plot image and kernel
-  fig, ax = plt.subplots(nrows=1, ncols=2)
-  ax[0].imshow(image[0, ...])
-  ax[1].imshow(gauss_kernel[..., 0])
-  ax[0].set_title('Image shape %s' % str(image.shape))
-  ax[1].set_title('Kernel shape %s' % str(gauss_kernel.shape))
-  plt.show()
+  plot_images([image[0, ...], gauss_kernel[..., 0]],
+              ['Image shape %s' % str(image.shape),
+               'Kernel shape %s' % str(gauss_kernel.shape)], 'Image to process',
+              show_plots)
 
   convolved_tf = cnn2d_tf(image, gauss_kernel)
   convolved_torch = cnn2d_torch(image, gauss_kernel)
 
   # plot tf and torch convolutions
-  fig, ax = plt.subplots(nrows=1, ncols=2)
-  ax[0].imshow(convolved_tf[0, ..., 0])
-  ax[1].imshow(convolved_torch[0, ..., 0])
-  ax[0].set_title('TF2 Conv shape %s' % str(convolved_tf.shape))
-  ax[1].set_title('PyTorch Conv shape %s' % str(convolved_torch.shape))
-  plt.show()
+  plot_images([convolved_tf[0, ..., 0], convolved_torch[0, ..., 0]],
+              ['TF2 Conv shape %s' % str(convolved_tf.shape),
+               'PyTorch Conv shape %s' % str(convolved_torch.shape)],
+              'Difference between convolutions %.2f' % np.mean(
+                  convolved_tf - convolved_torch), show_plots)
 
-  iters = 20000
-  start_time = time.time()
-  for i in range(iters):
-    cnn2d_tf(image, gauss_kernel)
-  print("Time usage conv2d TF2: %s" % str(timer(start_time, time.time())))
+  delta_time_list = []
+  for i in range(perform_exp_n_times):
+    start_time = time.time()
+    for i in range(iters_per_experiment):
+      cnn2d_tf(image, gauss_kernel)
+    delta_time_list.append(time.time() - start_time)
+  print("Time usage conv2d TF2: %s +/- %s" % (
+    str(timer(np.mean(delta_time_list))),
+    str(timer(np.std(delta_time_list), True))))
 
-  start_time = time.time()
-  for i in range(iters):
-    cnn2d_torch(image, gauss_kernel)
-  print("Time usage conv2d PyTorch: %s" % str(timer(start_time, time.time())))
+  delta_time_list = []
+  for i in range(perform_exp_n_times):
+    start_time = time.time()
+    for i in range(iters_per_experiment):
+      cnn2d_torch(image, gauss_kernel)
+    delta_time_list.append(time.time() - start_time)
+  print("Time usage conv2d PyTorch: %s +/- %s" % (
+    str(timer(np.mean(delta_time_list))),
+    str(timer(np.std(delta_time_list), True))))
 
+  if __name__ == "__main__":
+    import argparse
 
-if __name__ == "__main__":
-  main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--perform_exp_n_times",
+                        help="How many time to perform n_iterations for every function",
+                        default=10,
+                        type=int)
+    parser.add_argument("--iters_per_experiment",
+                        help="How many times to run each function",
+                        default=10000,
+                        type=int)
+    parser.add_argument("--show_plots",
+                        help="Whether to show image that are being convolved and their results",
+                        default=0, type=int)
+    args = parser.parse_args()
+
+    main(args.perform_exp_n_times, args.iters_per_experiment,
+         bool(args.show_plots))
