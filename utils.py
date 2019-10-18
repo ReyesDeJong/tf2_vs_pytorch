@@ -27,6 +27,8 @@ def plot_images(images: list, images_titles: list, fig_title: str, show=True):
   fig.suptitle(fig_title)
   if show:
     plt.show()
+  else:
+    plt.close(fig)
 
 
 def create_circular_mask(h, w, center=None, radius=None):
