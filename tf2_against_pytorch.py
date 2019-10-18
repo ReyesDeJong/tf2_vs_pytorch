@@ -89,21 +89,22 @@ def main(perform_exp_n_times: int, iters_per_experiment: int, show_plots: bool):
     str(timer(np.std(delta_time_list), True))))
 
   if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--perform_exp_n_times",
-                        help="How many time to perform n_iterations for every function",
-                        default=10,
-                        type=int)
-    parser.add_argument("--iters_per_experiment",
-                        help="How many times to run each function",
-                        default=10000,
-                        type=int)
-    parser.add_argument("--show_plots",
-                        help="Whether to show image that are being convolved and their results",
-                        default=0, type=int)
-    args = parser.parse_args()
-
-    main(args.perform_exp_n_times, args.iters_per_experiment,
-         bool(args.show_plots))
+    main(10, 10000, True)
+    # import argparse
+    #
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--perform_exp_n_times",
+    #                     help="How many time to perform n_iterations for every function",
+    #                     default=10,
+    #                     type=int)
+    # parser.add_argument("--iters_per_experiment",
+    #                     help="How many times to run each function",
+    #                     default=10000,
+    #                     type=int)
+    # parser.add_argument("--show_plots",
+    #                     help="Whether to show image that are being convolved and their results",
+    #                     default=0, type=int)
+    # args = parser.parse_args()
+    #
+    # main(args.perform_exp_n_times, args.iters_per_experiment,
+    #      bool(args.show_plots))
