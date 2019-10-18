@@ -24,7 +24,7 @@ def plot_images(images: list, images_titles: list, fig_title: str, show=True):
   for i in range(len(images)):
     ax[i].imshow(images[i])
     ax[i].set_title(images_titles[i])
-  fig.set_title(fig_title)
+  fig.suptitle(fig_title)
   if show:
     plt.show()
 
