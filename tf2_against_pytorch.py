@@ -89,7 +89,64 @@ def main(perform_exp_n_times: int, iters_per_experiment: int, show_plots: bool):
     str(timer(np.std(delta_time_list), True))))
 
   if __name__ == "__main__":
-    main(10, 10000, True)
+    # main(10, 10000, True)
+    show_plots = False
+    perform_exp_n_times = 10
+    iters_per_experiment = 10000
+
+    print('TensorFlow version %s' % str(tf.__version__))
+    print('PyTorch version %s' % str(torch.__version__))
+
+    # allowing soft growth of GPU in tensorflow
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+
+    # create an image of circular masks
+    g1 = create_circular_mask(21, 21, radius=4)
+    g2 = create_circular_mask(21, 21, radius=5)
+    g3 = create_circular_mask(21, 21, [3, 3], radius=3)
+    image = np.stack([g1, g2, g3], axis=-1)[None]
+    # create kernel to convolve image with
+    gauss_kernel = np.stack([make_gaussian(5, 1)] * 3, axis=-1)[..., None]
+
+    # plot image and kernel
+    plot_images([image[0, ...], gauss_kernel[..., 0]],
+                ['Image shape %s' % str(image.shape),
+                 'Kernel shape %s' % str(gauss_kernel.shape)],
+                'Image to process',
+                show_plots)
+
+    convolved_tf = cnn2d_tf(image, gauss_kernel)
+    convolved_torch = cnn2d_torch(image, gauss_kernel)
+
+    # plot tf and torch convolutions
+    plot_images([convolved_tf[0, ..., 0], convolved_torch[0, ..., 0]],
+                ['TF2 Conv shape %s' % str(convolved_tf.shape),
+                 'PyTorch Conv shape %s' % str(convolved_torch.shape)],
+                'Difference between convolutions %.2f' % np.mean(
+                    convolved_tf - convolved_torch), show_plots)
+
+    delta_time_list = []
+    for i in range(perform_exp_n_times):
+      start_time = time.time()
+      for i in range(iters_per_experiment):
+        cnn2d_tf(image, gauss_kernel)
+      delta_time_list.append(time.time() - start_time)
+    print("Time usage conv2d TF2: %s +/- %s" % (
+      str(timer(np.mean(delta_time_list))),
+      str(timer(np.std(delta_time_list), True))))
+
+    delta_time_list = []
+    for i in range(perform_exp_n_times):
+      start_time = time.time()
+      for i in range(iters_per_experiment):
+        cnn2d_torch(image, gauss_kernel)
+      delta_time_list.append(time.time() - start_time)
+    print("Time usage conv2d PyTorch: %s +/- %s" % (
+      str(timer(np.mean(delta_time_list))),
+      str(timer(np.std(delta_time_list), True))))
+
     # import argparse
     #
     # parser = argparse.ArgumentParser()
